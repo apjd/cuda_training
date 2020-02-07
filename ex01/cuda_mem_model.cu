@@ -24,22 +24,30 @@ int main()
     // allocate and initialize host memory
     // Bonus: try using cudaMallocHost in place of malloc
     // it has the same syntax as cudaMalloc, but it enables asynchronous copies
+    /*
     h_a = (float *) malloc(dimA*sizeof(float));
     for (int i = 0; i<dimA; ++i)
     {
         h_a[i] = i;
+    }*/
+
+    size_t memSize = dimA*sizeof(float);
+
+    cudaMallocHost(&h_a, memSize);
+
+    for (int i=0; i<dimA; ++i) {
+        h_a[i] = i;
     }
 
     // Part 1 of 5: allocate device memory
-    size_t memSize = dimA*sizeof(float);
-    cudaMalloc(  );
-    cudaMalloc(  );
+    cudaMalloc(&d_a, memSize);
+    cudaMalloc(&d_b, memSize);
 
     // Part 2 of 5: host to device memory copy
-    cudaMemcpy(  );
+    cudaMemcpy(d_a, h_a, memSize, cudaMemcpyHostToDevice);
 
     // Part 3 of 5: device to device memory copy
-    cudaMemcpy(  );
+    cudaMemcpy(d_b, d_a, memSize, cudaMemcpyDeviceToDevice);
 
     // clear host memory
     for (int i=0; i<dimA; ++i )
@@ -48,7 +56,7 @@ int main()
     }
 
     // Part 4 of 5: device to host copy
-    cudaMemcpy(  );
+    cudaMemcpy(h_a, d_a, memSize, cudaMemcpyDeviceToHost);
 
     // Check for any CUDA errors
     checkCUDAError("cudaMemcpy calls");
@@ -60,14 +68,14 @@ int main()
     }
 
     // Part 5 of 5: free device memory pointers d_a and d_b
-    cudaFree( );
-    cudaFree( );
+    cudaFree(d_a);
+    cudaFree(d_b);
 
     // Check for any CUDA errors
     checkCUDAError("cudaFree");
 
     // free host memory pointer h_a
-    free(h_a);
+    cudaFreeHost(h_a);
 
     // If the program makes it this far, then the results are correct and
     // there are no run-time errors.  Good work!
