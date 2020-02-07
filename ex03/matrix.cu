@@ -9,7 +9,10 @@ void checkCUDAError(const char *msg);
 // Part 2 of 4: implement the kernel
 __global__ void kernel( int *a, int dimx, int dimy ) {
 
+    int x = threadIdx.x + blockIdx.x * blockDim.x;
+    int y = threadIdx.y + blockIdx.y * blockDim.y;
 
+    a[x*dimx + y] = x*dimx+y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -18,15 +21,16 @@ __global__ void kernel( int *a, int dimx, int dimy ) {
 int main() {
     cudaSetDevice(MYDEVICE);
 // Part 1 and 4 of 4: set the dimensions of the matrix
-    int dimx = ;
-    int dimy = ;
+    int dimx = 4;
+    int dimy = 4;
     int num_bytes = dimx*dimy*sizeof(int);
 
     int *d_a=0, *h_a=0; // device and host pointers
 
-    h_a = (int*)malloc(num_bytes);
+    //h_a = (int*)malloc(num_bytes);
+    cudaMallocHost(&h_a, num_bytes);
     //allocate memory on the device
-    cudaMalloc( );
+    cudaMalloc(&d_a, num_bytes);
 
     if( NULL==h_a || NULL==d_a ) {
         std::cerr << "couldn't allocate memory" << std::endl;
@@ -35,10 +39,10 @@ int main() {
 
     // Part 2 of 4: define grid and block size and launch the kernel
     dim3 grid, block;
-    block.x = ;
-    block.y = ;
-    grid.x  = ;
-    grid.y  = ;
+    block.x = 2;
+    block.y = 2;
+    grid.x  = 2;
+    grid.y  = 2;
 
     kernel<<<grid, block>>>( d_a, dimx, dimy );
     // block until the device has completed
@@ -46,7 +50,7 @@ int main() {
     // check if kernel execution generated an error
     checkCUDAError("kernel execution");
     // device to host copy
-    cudaMemcpy( );
+    cudaMemcpy(h_a, d_a, num_bytes, cudaMemcpyDeviceToHost);
 
     // Check for any CUDA errors
     checkCUDAError("cudaMemcpy");
