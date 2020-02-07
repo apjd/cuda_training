@@ -8,9 +8,10 @@
 void checkCUDAError(const char *msg);
 
 // Part 3 of 5: implement the kernel
-__global__ void myFirstKernel(  )
+__global__ void myFirstKernel(int *d_a)
 {
-
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    d_a[i] = blockIdx.x + threadIdx.x; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,13 +32,14 @@ int main( int argc, char** argv)
 
     // Part 1 of 5: allocate host and device memory
     size_t memSize = numBlocks * numThreadsPerBlock * sizeof(int);
-    h_a = (int *) malloc(memSize);
-    cudaMalloc( );
+    //h_a = (int *) malloc(memSize);
+    cudaMallocHost(&h_a, memSize);
+    cudaMalloc(&d_a, memSize);
 
     // Part 2 of 5: configure and launch kernel
-    dim3 dimGrid( );
-    dim3 dimBlock( );
-    myFirstKernel<<< , >>>(  );
+    dim3 dimGrid(8);
+    dim3 dimBlock(8);
+    myFirstKernel<<<dimGrid.x , dimBlock.x>>>(d_a);
 
     // block until the device has completed
     cudaDeviceSynchronize();
@@ -46,7 +48,7 @@ int main( int argc, char** argv)
     checkCUDAError("kernel execution");
 
     // Part 4 of 5: device to host copy
-    cudaMemcpy( );
+    cudaMemcpy(h_a, d_a, memSize, cudaMemcpyDeviceToHost);
 
     // Check for any CUDA errors
     checkCUDAError("cudaMemcpy");
@@ -56,13 +58,12 @@ int main( int argc, char** argv)
     {
         for (int j = 0; j <       8            ; ++j)
         {
-            // assert(h_a[i * numThreadsPerBlock + j] == i + j);
+            assert(h_a[i * numThreadsPerBlock + j] == i + j);
         }
     }
 
     // free device memory
-    cudaFree(d_a);
-
+    cudaFree(d_a); 
     // free host memory
     free(h_a);
 
