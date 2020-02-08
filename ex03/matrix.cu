@@ -1,5 +1,6 @@
 #include <iostream>
 #include <assert.h>
+#include <stdio.h>
 // Here you can set the device ID that was assigned to you
 #define MYDEVICE 0
 
@@ -12,7 +13,10 @@ __global__ void kernel( int *a, int dimx, int dimy ) {
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
 
-    a[x*dimx + y] = x*dimx+y;
+    int uniqueIdx = x*dimx + y;
+
+    a[uniqueIdx] = uniqueIdx;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,6 +35,8 @@ int main() {
     cudaMallocHost(&h_a, num_bytes);
     //allocate memory on the device
     cudaMalloc(&d_a, num_bytes);
+
+    std::cout << "d_a: " << h_a << std::endl;
 
     if( NULL==h_a || NULL==d_a ) {
         std::cerr << "couldn't allocate memory" << std::endl;
@@ -61,7 +67,7 @@ int main() {
             assert(h_a[row * dimx + col] == row * dimx + col);
     }
     // free host memory
-    free( h_a );
+    cudaFreeHost( h_a );
     // free device memory
     cudaFree( d_a );
 
