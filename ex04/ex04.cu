@@ -1,6 +1,6 @@
 #include <stdio.h>
 // Here you can set the device ID that was assigned to you
-#define MYDEVICE 0
+#define MYDEVICE 1
 __global__
 void saxpy(unsigned int n, double a, double *x, double *y)
 {
@@ -8,12 +8,16 @@ void saxpy(unsigned int n, double a, double *x, double *y)
   if (i < n) y[i] = a*x[i] + y[i];
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
   cudaSetDevice(MYDEVICE);
 
   // 1<<N is the equivalent to 2^N
-  unsigned int N = 20 * (1 << 20);
+  unsigned int N = 900 * (1 << 20);
+
+  if (argc > 1) {
+    
+  }
   double *x, *y, *d_x, *d_y;
   x = (double*)malloc(N*sizeof(double));
   y = (double*)malloc(N*sizeof(double));
@@ -46,6 +50,15 @@ int main(void)
 
   float milliseconds = 0;
   cudaEventElapsedTime(&milliseconds, start, stop);
+
+  printf("Time elapsed: %f \n", milliseconds);
+
+  double kernelThroughput = (sizeof(unsigned int)+sizeof(double)+N*sizeof(double)+N*sizeof(double))/(milliseconds*std::pow(10, 3));
+  kernelThroughput = kernelThroughput/(pow(10, 9));
+  printf("Throughput in Gigabyte/s: %f \n", kernelThroughput);
+
+  double deviceThroughput = (1752*std::pow(10.0, 6.0)*512)/(std::pow(10.0, 9.0));
+  printf("Device throughput: %f \n", deviceThroughput);
 
   double maxError = 0.;
   for (unsigned int i = 0; i < N; i++) {
